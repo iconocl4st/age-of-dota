@@ -37,5 +37,7 @@ output/recorded_games/recorded_game_*
 .idea/*.xml
 .idea/codeStyles
 cmake-build-debug
+ui/.qmake.stash
+
 
 
