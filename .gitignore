@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+output/*.json
+output/*.txt
+output/recorded_games/recorded_game_*
+.idea/*.xml
+.idea/codeStyles
+cmake-build-debug
+
+

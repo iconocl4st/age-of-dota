@@ -1,0 +1,6 @@
+{
+    "output-directory": "./output",
+    "server-address": "127.0.0.1",
+    "port": 8082,
+    "number-of-threads": 2
+}
