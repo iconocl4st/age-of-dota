@@ -12,7 +12,7 @@ def train_value_function(game_states, player_numbers, won):
     training_dimensions = get_training_dimensions()
 
     training_input = {}
-    training_output = { "won": np.zeros((num_games, 2)) }
+    training_output = {"won": np.zeros((num_games, 2))}
     for input in training_dimensions['state']['inputs']:
         training_input[input] = np.zeros(tuple(
             [num_games] + [i for i in training_dimensions['state'][input]]
@@ -36,3 +36,5 @@ def train_value_function(game_states, player_numbers, won):
     )
 
     model.fit(training_input, training_output['won'][:, 0], epochs=100)
+
+    model.save_weights(ValueHolder.get_save_path())

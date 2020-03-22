@@ -119,7 +119,7 @@ void Lobby::setPlayerAsAi(int playerNumber, bool isAi) {
     }
     if (isAi) {
     	// TODO: We should accept another parameter...
-		if (playerNumber == 1) {
+		if (false && playerNumber == 1) {
 			BOOST_LOG_SEV(logger, NORMAL) << "Launching native AI thread...";
 			aiThreads.push_back(std::make_shared<std::thread>(aiLauncher, name, playerNumber));
 		} else {

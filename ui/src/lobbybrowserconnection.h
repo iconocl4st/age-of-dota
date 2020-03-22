@@ -9,6 +9,7 @@ public:
     bool connected{false};
     bool ready{false};
     bool allReady{false};
+    bool isSpectating{false};
     std::string lobbyName{""};
 
     LobbyBrowserConnection();

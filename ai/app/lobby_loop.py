@@ -1,6 +1,7 @@
 
 from .network import Message
 
+
 class AiLobbyState:
     REQUESTED_LOBBY_LIST = 0
     JOINED_LOBBY = 1
@@ -10,8 +11,10 @@ class AiLobbyState:
     def __init__(self):
         self.current_state = AiLobbyState.REQUESTED_LOBBY_LIST
 
+
 def handle_noop(application, lobby):
     pass
+
 
 def handle_lobby_list(application, lobby):
     if lobby.current_state != AiLobbyState.REQUESTED_LOBBY_LIST:
@@ -26,6 +29,7 @@ def handle_lobby_list(application, lobby):
     application.logger.log("Joining lobby")
     application.client_connection.join_lobby(application.lobby_name, application.player_number)
     lobby.current_state = AiLobbyState.JOINED_LOBBY
+
 
 def handle_status_update(application, lobby):
     application.logger.log("Received lobby update.")
@@ -55,10 +59,11 @@ def handle_status_update(application, lobby):
     elif lobby.current_state == AiLobbyState.READY_TO_LAUNCH:
         if not status_update["ready"]:
             application.logger.log("Was ready, but not anymore?!")
-            application.client_connection = True
+            application.close_connection = True
     else:
         application.logger.log("Unexpected state: " + str(current_state))
         application.close_connection = True
+
 
 def handle_launch(application, lobby):
     if lobby.current_state != AiLobbyState.READY_TO_LAUNCH:
@@ -72,8 +77,10 @@ def handle_launch(application, lobby):
     application.logger.log("Launching!!!!")
     return launch_message
 
+
 def handle_close_connection(application, lobby):
     application.client_connection = True
+
 
 def run_lobby_loop(application):
     lobby = AiLobbyState()

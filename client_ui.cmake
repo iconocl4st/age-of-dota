@@ -46,7 +46,7 @@ target_include_directories(
         ${Qt5Widgets_LIBRARIES}
         ${Qt5Declarative_INCLUDE_DIRS}
 
-        /home/thallock/Documents/QtProjects/Experiment/QtExperiment/
+        ${CMAKE_CURRENT_SOURCE_DIR}/ui/src/
 )
 
 
@@ -63,8 +63,6 @@ target_include_directories(
         ${OPENGL_INCLUDE_DIRS}
         ${GLUT_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIRS}
-
-        /home/thallock/Documents/QtProjects/Experiment/QtExperiment/
 )
 
 
@@ -75,12 +73,12 @@ target_link_libraries(
         common_client_lib
         common_lib
 
+        qt_ui_library
+
         ${OPENGL_LIBRARIES}
         ${GLUT_LIBRARY}
         ${GLEW_LIBRARIES}
         Qt5::Widgets
-
-        /home/thallock/Documents/QtProjects/Experiment/build-QtExperiment-Desktop-Debug/libQtExperiment.a
 
         ${Boost_LIBRARIES}
 

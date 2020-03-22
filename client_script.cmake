@@ -34,8 +34,6 @@ target_link_libraries(
         common_client_lib
         common_lib
 
-        /home/thallock/Documents/QtProjects/Experiment/build-QtExperiment-Desktop-Debug/libQtExperiment.a
-
         ${Boost_LIBRARIES}
 
         ${CMAKE_DL_LIBS}

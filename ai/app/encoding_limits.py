@@ -9,17 +9,20 @@ class Actions:
 
     NUM_ACTIONS = 6
 
+
 class Resources:
     FOOD = 0
     WOOD = 1
 
     NUM_RESOURCES = 2
 
+
 class EntityTypes:
     HUMAN = 1
     TREE = 2
 
     NUM_ENTITIES = 2
+
 
 class NumpyLimits:
     MAX_NUM_PLAYERS = 3

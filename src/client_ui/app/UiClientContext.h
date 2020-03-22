@@ -5,9 +5,10 @@
 #ifndef PLAYING_UICLIENTCONTEXT_H
 #define PLAYING_UICLIENTCONTEXT_H
 
-#include <lobbybrowser.h>
-#include <gamewindow.h>
 #include <thread>
+
+#include "../../../ui/src/lobbybrowser.h"
+#include "../../../ui/src/gamewindow.h"
 
 #include "../ui/LobbyBrowserAdapter.h"
 #include "../ui/GameWindowAdapterImpl.h"

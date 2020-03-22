@@ -64,7 +64,7 @@ void parseLobbyConnection(JsonReader& reader, LobbyBrowserConnection& connection
 	connection.connected = reader.readBoolean("connected");
 	connection.ready = reader.readBoolean("ready");
 	connection.allReady = reader.readBoolean("all-ready");
-	/* connection.isSpectating = */ reader.readBoolean("spectating");
+	connection.isSpectating = reader.readBoolean("spectating");
 	connection.lobbyName = reader.readString("lobby-name");
 }
 

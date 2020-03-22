@@ -1,11 +1,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
 
-import numpy as np
+from .set_memory import MemorySetter
+import os
 from app.game_state import get_training_dimensions
-from app.encoding_limits import NumpyLimits
-from app.encoding_limits import Actions
-from app.encoding_limits import Resources
+
 
 class ValueHolder:
     _ValueFunction = None
@@ -14,12 +13,22 @@ class ValueHolder:
     def _ensure_initialized(cls):
         if cls._ValueFunction is not None:
             return
+        MemorySetter.set_memory_usage()
         cls._ValueFunction = construct_value_function()
+
+        if os.path.exists(ValueHolder.get_save_path() + '.index'):
+            cls._ValueFunction.load_weights(ValueHolder.get_save_path())
+
+        checkpoint_path = "output/saved_networks/value-cp-{epoch:04d}.ckpt"
 
     @classmethod
     def get_value(cls):
         cls._ensure_initialized()
         return cls._ValueFunction
+
+    @staticmethod
+    def get_save_path():
+        return './output/saved_networks/value_function'
 
 
 def construct_value_function():
@@ -46,6 +55,6 @@ def construct_value_function():
 
     model = tf.keras.Model(inputs=inputs, outputs=x, name='ai_value_function')
 
-    tf.keras.utils.plot_model(model, 'saved_networks/value_function.png', show_shapes=True)
+    tf.keras.utils.plot_model(model, 'output/saved_networks/value_function.png', show_shapes=True)
 
     return model

@@ -12,11 +12,10 @@
 #include "../../common/state/Point.h"
 #include "../../common/state/definitions.h"
 
-//#include <lobbybrowser.h>
-#include "../../../../../QtProjects/Experiment/QtExperiment/lobbybrowserconnection.h"
 #include "../../common/state/CommonState.h"
 #include "../../common/state/LocationManager.h"
 #include "../../common/network/GameResult.h"
+#include "../../../ui/src/lobbybrowserconnection.h"
 
 namespace aod::client::common::network {
 

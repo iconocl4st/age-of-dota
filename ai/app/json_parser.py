@@ -1,8 +1,6 @@
 #  https://stackoverflow.com/questions/6886283/how-i-can-i-lazily-read-multiple-json-values-from-a-file-stream-in-python
 
 
-import math
-
 class JsonTokens:
     BEGIN_OBJECT = '{'
     END_OBJECT = '}'
@@ -16,6 +14,7 @@ class JsonTokens:
     STRING = '"'
     NUMBER = 'number'
     COMMA = ','
+
 
 def _parse_utf8(byte_data, emit):
     # TODO:
@@ -80,11 +79,13 @@ def _parse_hex(reader):
     #
     # return _hex
 
+
 def _parse_constant(expected, reader):
     for i in range(len(expected)):
         found = reader.read()
         if expected[i] != found:
             raise Exception("Unexpected character, expected: " + str(expected[i]) + ", but found: " + str(found))
+
 
 def _parse_string(reader):
     string = ""
@@ -103,6 +104,7 @@ def _parse_string(reader):
             raise Exception("Unexpected control character: 0x" + str(byte_data))
 
         string += chr(byte_data)
+
 
 def _parse_escape(byte_data):
     if byte_data == 0x22 or byte_data == 0x5c or byte_data == 0x2f:  # " \ /
@@ -133,6 +135,7 @@ def _parse_escape(byte_data):
 
     raise Exception("Unexpected escape: " + chr(byte_data))
 
+
 def _is_number_char(byte_data):
     part_of_float = (
             byte_data == 0x2e  # .
@@ -145,6 +148,7 @@ def _is_number_char(byte_data):
             or byte_data == 0x2d  # -
             or byte_data == 0x2b  # +
     ), part_of_float
+
 
 def _parse_number(byte_data, reader):
     string = "" + chr(byte_data)
@@ -162,6 +166,7 @@ def _parse_number(byte_data, reader):
         return int(string)
     else:
         return float(string)
+
 
 class JsonTokener:
     TRUE = [0x72, 0x75, 0x65]
@@ -254,6 +259,7 @@ class JsonTokener:
 
         raise Exception("Did not see expected character: " + byte_data)
 
+
 class LookAhead:
     def __init__(self, reader):
         self.reader = reader
@@ -268,7 +274,6 @@ class LookAhead:
         self.peeked = True
         return self.next
 
-
     def read(self):
         if self.peeked:
             r = self.next
@@ -281,8 +286,10 @@ class LookAhead:
 class OpenedObject:
     def __init__(self, reader):
         self.reader = reader
+
     def __enter__(self):
         pass
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.reader.read_end_object()
 

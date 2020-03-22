@@ -55,6 +55,36 @@ class StateIndices:
     PROJECTILE_ATT_IDX_NUM_PROJECTILES = PROJ_ATT_IDX; PROJ_ATT_IDX += 1
 
 
+def create_action_vector(action):
+    action_vector = np.zeros(StateIndices.ACTION_IDX)
+    if action['action-type'] == Actions.IDLE:
+        action_vector[StateIndices.ACTION_IS_IDLE] = 1
+    elif action['action-type'] == Actions.COLLECT:
+        action_vector[StateIndices.ACTION_IS_COLLECT] = 1
+        # TODO: set the action resource
+    elif action['action-type'] == Actions.DEPOSIT:
+        action_vector[StateIndices.ACTION_IS_DEPOSIT] = 1
+        # TODO: set the action resource
+    elif action['action-type'] == Actions.STRAFE:
+        action_vector[StateIndices.ACTION_IS_STRAFE] = 1
+        if action['action-args']['is-left']:
+            action_vector[StateIndices.ACTION_STRAFE_IS_LEFT] = 1
+    elif action['action-type'] == Actions.ATTACK:
+        action_vector[StateIndices.ACTION_IS_ATTACK] = 1
+    elif action['action-type'] == Actions.MOVE:
+        action_vector[StateIndices.ACTION_IS_MOVEMENT] = 1
+        action_vector[StateIndices.ACTION_MOVEMENT_DESIRED_ORIENTATION] = \
+            action['action-args']['desired-orientation']
+        if len(action['action-args']['path']) > 0:
+            action_vector[StateIndices.ACTION_MOVEMENT_X] = \
+                action['action-args']['path'][0]['x']
+            action_vector[StateIndices.ACTION_MOVEMENT_Y] = \
+                action['action-args']['path'][0]['y']
+    else:
+        raise Exception('unknown action type')
+    return action_vector
+
+
 def assign_player_entities(state, assignment, player, player_index, entities_tensor):
     entity_list = state['entities-by-player'][player].values()
     for idx, entity in enumerate(entity_list):
@@ -84,39 +114,12 @@ def assign_player_entities(state, assignment, player, player_index, entities_ten
             entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX_MOVEMENT_STARTTIME] = entity['movement']['start-time']
 
         if 'action' in entity and entity['action'] is not None:
-            if entity['action']['action-type'] == Actions.IDLE:
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_IS_IDLE] = 1
-            elif entity['action']['action-type'] == Actions.COLLECT:
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_IS_COLLECT] = 1
-            elif entity['action']['action-type'] == Actions.DEPOSIT:
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_IS_DEPOSIT] = 1
-            elif entity['action']['action-type'] == Actions.STRAFE:
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_IS_STRAFE] = 1
-                if entity['action']['action-args']['is-left']:
-                    entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                        StateIndices.ACTION_STRAFE_IS_LEFT] = 1
-            elif entity['action']['action-type'] == Actions.ATTACK:
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_IS_ATTACK] = 1
-            elif entity['action']['action-type'] == Actions.MOVE:
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_IS_MOVEMENT] = 1
-                entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                    StateIndices.ACTION_MOVEMENT_DESIRED_ORIENTATION] = \
-                    entity['action']['action-args']['desired-orientation']
-                if len(entity['action']['action-args']['path']) > 0:
-                    entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                        StateIndices.ACTION_MOVEMENT_X] = \
-                        entity['action']['action-args']['path'][0]['x']
-                    entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX +
-                        StateIndices.ACTION_MOVEMENT_Y] = \
-                        entity['action']['action-args']['path'][0]['y']
-            else:
-                pass
+            entities_tensor[
+                player_index,
+                entity_idx,
+                StateIndices.ATT_IDX:(StateIndices.ATT_IDX + StateIndices.ACTION_IDX)
+            ] = create_action_vector(entity['action'])
+
 
 def assign_projectiles(state, assignment, projectiles):
     for i, projectile in enumerate(state['projectiles'].values()):
@@ -128,6 +131,7 @@ def assign_projectiles(state, assignment, projectiles):
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_X] = projectile['x']
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_Y] = projectile['y']
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_NUM_PROJECTILES] = len(projectile['sunk'])
+
 
 def game_state_to_numpy(state, player_number, assignment=None):
     if assignment is None:
@@ -156,6 +160,25 @@ def game_state_to_numpy(state, player_number, assignment=None):
     )
     return ret
 
+
+def actions_to_numpy(state, actions, player_number, assignment):
+    training_dimensions = get_training_dimensions()
+    actions_mat = np.zeros(training_dimensions['actions'])
+    player_idx = assignment.get_player_index(player_number, player_number)
+    entity_idxs = {
+        entity['id']: idx
+        for idx, entity in enumerate(state['entities-by-player'][player_idx].values())
+    }
+
+    for entity_id, action in actions.items():
+        entity_idx = assignment.entity_mapping[player_idx, entity_idxs[entity_id]]
+        actions_mat[entity_idx] = create_action_vector(action)
+
+    return {
+        'actions': actions_mat
+    }
+
+
 def get_training_dimensions():
     return {
         'state': {
@@ -178,6 +201,10 @@ def get_training_dimensions():
             ),
         },
         'actions': {
-            'inputs': []
+            'inputs': ['actions'],
+            'actions': (
+                NumpyLimits.MAX_NUM_ENTITIES_PER_PLAYER,
+                StateIndices.ACTION_IDX
+            ),
         }
     }

@@ -13,6 +13,7 @@ from .game_loop import run_game_loop
 
 from tf_nueral_network.policy_function import PolicyHolder
 
+
 def parse_messages(filename):
     with open(filename, "r") as msgIn:
         msgObj = json.load(msgIn)

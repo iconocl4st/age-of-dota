@@ -1,6 +1,7 @@
 
 import os
 
+
 class ClientApplication:
     def __init__(self):
         self.client_connection = None

@@ -109,4 +109,9 @@ add_library(common_lib STATIC
 
         src/common/network/GameResult.cpp
         src/common/network/GameResult.h
-        src/common/util/logging_levels.h src/common/util/signal_handler.cpp src/common/util/signal_handler.h src/common/state/Actions.cpp)
+        src/common/util/logging_levels.h
+        src/common/util/signal_handler.cpp
+        src/common/util/signal_handler.h
+        src/common/state/Actions.cpp
+
+)

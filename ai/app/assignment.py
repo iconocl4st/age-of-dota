@@ -2,15 +2,16 @@
 import numpy as np
 from .encoding_limits import NumpyLimits
 
+
 def set_player_to_zero(player_to_idx, player_number):
-    cAssign = -1
+    c_assigned = -1
     for idx, assignment in enumerate(player_to_idx):
         if assignment == 0:
-            cAssign = idx
-    if cAssign == player_number:
+            c_assigned = idx
+    if c_assigned == player_number:
         return
 
-    player_to_idx[cAssign] = player_to_idx[player_number]
+    player_to_idx[c_assigned] = player_to_idx[player_number]
     player_to_idx[player_number] = 0
 
 

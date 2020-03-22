@@ -10,6 +10,7 @@ from .json_parser import FileOutputWriter
 
 from .encoding_limits import Actions
 
+
 class Message:
     Types = {}
 
@@ -19,6 +20,7 @@ class Message:
             if value == msg_value:
                 return key
         raise Exception("Unknown message type: " + msg_value);
+
 
 class ClientBuffer:
     def __init__(self, client_socket):
@@ -36,6 +38,7 @@ class ClientBuffer:
         r = self.input_buffer[self.input_buffer_index]
         self.input_buffer_index += 1
         return r
+
 
 class ClientConnection:
     def __init__(self, writer, parser):
@@ -286,10 +289,6 @@ class ClientConnection:
             raise Exception("Invalid action")
         self.writer.write_end_object()
         self.writer.write_end_object()
-
-
-        # Not needed!!
-        self.writer.flush()
 
 
 def create_client_connection(socket, output_file):

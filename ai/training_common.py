@@ -1,7 +1,7 @@
 
 import json
 import os
-import numpy as np
+
 
 class Record:
     def __init__(self):
@@ -9,7 +9,7 @@ class Record:
         self.winner_num = None
 
     def __str__(self):
-        return "[winner="+str(self.winner_num) +",file=" + self.state_file + "]"
+        return "[winner="+str(self.winner_num) + ",file=" + self.state_file + "]"
 
     def __repr__(self):
         return self.__str__()

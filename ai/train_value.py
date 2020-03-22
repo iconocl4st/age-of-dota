@@ -1,9 +1,6 @@
-import os
 import json
 import numpy as np
 
-from app.game_state import game_state_to_numpy
-from app.game_state import get_training_dimensions
 from training_common import collect_records
 from tf_nueral_network.train_value_function import train_value_function
 
@@ -23,7 +20,7 @@ def train_value(recorded_games_dir):
         record = records[record_idx]
 
         with open(record.state_file, "r") as statein:
-            state = json.load(statein)
+            state = json.load(statein)['state']
 
             games.append(state)
             player_numbers[game_idx] = np.random.randint(low=0, high=len(state['entities-by-player']))
@@ -31,7 +28,8 @@ def train_value(recorded_games_dir):
 
     train_value_function(games, player_numbers, won)
 
+
 if __name__ == "__main__":
     for i in range(10):
-        train_value('/home/thallock/Documents/CLionProjects/playing/output/recorded_games')
+        train_value('./output/recorded_games')
 

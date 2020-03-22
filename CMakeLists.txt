@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(playing)
+project(age-of-dota)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
@@ -21,6 +21,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/common_client.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/client_ui.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/client_script.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/server.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/ui_lib.cmake)
 
 
 add_executable(
@@ -46,7 +47,7 @@ target_include_directories(
         ${Qt5Widgets_LIBRARIES}
         ${Qt5Declarative_INCLUDE_DIRS}
 
-        /home/thallock/Documents/QtProjects/Experiment/QtExperiment/
+        ${CMAKE_CURRENT_SOURCE_DIR}/ui/src/
 )
 
 target_link_libraries(
@@ -58,7 +59,8 @@ target_link_libraries(
         common_client_lib
         common_lib
 
-        /home/thallock/Documents/QtProjects/Experiment/build-QtExperiment-Desktop-Debug/libQtExperiment.a
+        qt_ui_library
+
 
         ${OPENGL_LIBRARIES}
         ${GLUT_LIBRARY}

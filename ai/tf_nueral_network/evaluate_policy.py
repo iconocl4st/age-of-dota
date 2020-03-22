@@ -52,6 +52,7 @@ def parse_actions(output, game_state, assignments, player_number):
         actions[entity['id']] = action_obj
     return actions
 
+
 def evaluate_policy(game_state, player_number=None, assignment=None):
     if assignment is None:
         assignment = Assignment()
