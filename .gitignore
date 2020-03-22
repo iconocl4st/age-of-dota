@@ -39,5 +39,7 @@ output/recorded_games/recorded_game_*
 cmake-build-debug
 ui/.qmake.stash
 
-
+ui/build/Makefile
+ui/build/*.cpp
+ui/build/*.h
 
