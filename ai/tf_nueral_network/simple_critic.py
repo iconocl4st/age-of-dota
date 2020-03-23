@@ -3,9 +3,8 @@ import tensorflow as tf
 import os
 
 from app.game_state import get_training_dimensions
-from app.encoding_limits import NumpyLimits
-from app.encoding_limits import Actions
-from app.encoding_limits import Resources
+from .nn_building_common import add_dense_layers
+from .nn_building_common import get_nn_inputs
 from .set_memory import MemorySetter
 
 
@@ -21,10 +20,13 @@ class SimpleCriticFunction:
         cls._CriticFunction = construct_critic()
 
         if os.path.exists(SimpleCriticFunction.get_save_path() + '.index'):
-            cls._CriticFunction.load_weights(SimpleCriticFunction.get_save_path())
+            try:
+                cls._CriticFunction.load_weights(SimpleCriticFunction.get_save_path())
+            except:
+                print('could not load previous critic')
 
     @classmethod
-    def get_policy(cls):
+    def get_critic(cls):
         cls._ensure_initialized()
         return cls._CriticFunction
 
@@ -34,41 +36,16 @@ class SimpleCriticFunction:
 
 
 def construct_critic():
-    width = 128
-    height = 3
-
     training_dimensions = get_training_dimensions()
-    inputs = []
-    input_ends = []
-    for input in [
-        training_dimensions['state']['inputs'] +
-        training_dimensions['state']['actions']
-    ]:
-        input_layer = tf.keras.Input(
-            shape=tuple([i for i in training_dimensions['state'][input]]),
-            name=input
-        )
-        inputs.append(input_layer)
-        input_ends.append(tf.keras.layers.Flatten()(input_layer))
 
-    x = tf.keras.layers.Concatenate()(input_ends)
+    state_inputs, state_input_ends = get_nn_inputs(training_dimensions['state'])
+    action_inputs, action_input_ends = get_nn_inputs(training_dimensions['actions'])
 
-    for i in range(height):
-        x = tf.keras.layers.Dense(width, activation='relu')(x)
-        x = tf.keras.layers.Dropout(0.2)(x)
+    x = tf.keras.layers.Concatenate()(state_input_ends + action_input_ends)
+    x = add_dense_layers(128, 3, x)
+    x = tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
-    last_layer = x
-
-    outputs = {
-        'which-action': create_categorical_output(last_layer, Actions.NUM_ACTIONS),
-        'movement': create_linear_output(last_layer, 3),
-        'collect-resources': create_categorical_output(last_layer, Resources.NUM_RESOURCES),
-        'deposit-resources': create_categorical_output(last_layer, Resources.NUM_RESOURCES),
-        'strafe-direction': create_categorical_output(last_layer, 2),
-        'change-action': create_categorical_output(last_layer, 2),
-    }
-
-    model = tf.keras.Model(inputs=inputs, outputs=[o for o in outputs.values()], name='ai_policy_function')
-    tf.keras.utils.plot_model(model, 'output/saved_networks/policy_function.png', show_shapes=True)
-    return model, [k for k in outputs.keys()]
+    model = tf.keras.Model(inputs=state_inputs + action_inputs, outputs=x, name='ai_critic_function')
+    tf.keras.utils.plot_model(model, 'output/saved_networks/critic_function.png', rankdir='LR', show_shapes=True)
+    return model
 

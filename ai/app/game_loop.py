@@ -102,12 +102,12 @@ def handle_game_over(application, game_state):
 
 
 def handle_request_actions(application, game_state):
-    actions = evaluate_policy(game_state)
+    actions = evaluate_policy(game_state)  # could cash the assignment
     for entityId, action in actions.items():
         application.client_connection.send_action_request(entityId, action)
     with open(application.get_next_game_file(), 'w+') as outfile:
         json.dump(
-            { 'state': game_state, 'actions': actions },
+            {'state': game_state, 'actions': actions},
             outfile,
             indent=2
         )

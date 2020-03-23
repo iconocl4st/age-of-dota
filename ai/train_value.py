@@ -1,19 +1,19 @@
 import json
 import numpy as np
 
-from training_common import collect_records
+from app.record_manager import collect_records
 from tf_nueral_network.train_value_function import train_value_function
+from tf_nueral_network.nn_building_common import get_random_player
 
 
 def train_value(recorded_games_dir):
-    num_states = 10
+    num_states = 10000
 
     records = collect_records(recorded_games_dir)
 
-    print('training on', num_states, 'of', len(records))
+    print('training value on', num_states, 'of', len(records))
 
     games = []
-    player_numbers = np.zeros(num_states, dtype=int)
     won = np.zeros(num_states, dtype=bool)
 
     for game_idx, record_idx in enumerate(np.random.choice(len(records), num_states, replace=True)):
@@ -23,13 +23,12 @@ def train_value(recorded_games_dir):
             state = json.load(statein)['state']
 
             games.append(state)
-            player_numbers[game_idx] = np.random.randint(low=0, high=len(state['entities-by-player']))
-            won[game_idx] = record.winner_num == player_numbers[game_idx]
+            won[game_idx] = record.winner_num == state['player-number']
 
-    train_value_function(games, player_numbers, won)
+    train_value_function(games, won)
 
 
 if __name__ == "__main__":
-    for i in range(10):
+    for i in range(5):
         train_value('./output/recorded_games')
 

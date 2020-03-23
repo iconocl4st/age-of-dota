@@ -14,15 +14,13 @@ def np_to_tensor(obj, name):
 
 
 def parse_actions(output, game_state, assignments, player_number):
-    player_index = assignments.get_player_index(player_number, player_number)
-
     actions = {}
 
-    for idx, entity in enumerate(game_state['entities-by-player'][player_number].values()):
-        entity_idx = assignments.entity_mapping[player_index, idx]
+    for entity_id in game_state['entities-by-player'][player_number].keys():
+        entity_idx = assignments.get_entity_index(0, entity_id)
         if output['change-action'][0, entity_idx] == 0:
             continue
-        action_obj = { 'action-type': int(output['which-action'][0, entity_idx]) }
+        action_obj = {'action-type': int(output['which-action'][0, entity_idx])}
         if action_obj['action-type'] == Actions.IDLE:
             action_obj['action-args'] = {}
         elif action_obj['action-type'] == Actions.MOVE:
@@ -49,19 +47,16 @@ def parse_actions(output, game_state, assignments, player_number):
             }
         else:
             raise Exception("Invalid action")
-        actions[entity['id']] = action_obj
+        actions[entity_id] = action_obj
     return actions
 
 
-def evaluate_policy(game_state, player_number=None, assignment=None):
+def evaluate_policy(game_state, assignment=None):
     if assignment is None:
-        assignment = Assignment()
-    if player_number is None:
-        player_number = game_state['player-number']
+        assignment = Assignment(game_state['player-number'])
 
     state_data = game_state_to_numpy(
         state=game_state,
-        player_number=player_number,
         assignment=assignment
     )
     predictions = PolicyHolder.get_policy().predict({
@@ -75,6 +70,6 @@ def evaluate_policy(game_state, player_number=None, assignment=None):
         },
         game_state,
         assignment,
-        player_number
+        game_state['player-number']
     )
 

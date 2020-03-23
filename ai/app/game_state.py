@@ -86,9 +86,8 @@ def create_action_vector(action):
 
 
 def assign_player_entities(state, assignment, player, player_index, entities_tensor):
-    entity_list = state['entities-by-player'][player].values()
-    for idx, entity in enumerate(entity_list):
-        entity_idx = assignment.entity_mapping[player_index, idx]
+    for entity_id, entity in state['entities-by-player'][player].items():
+        entity_idx = assignment.get_entity_index(player_index, entity_id)
         entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX_X] = entity['attributes']['x']
         entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX_Y] = entity['attributes']['y']
         entities_tensor[player_index, entity_idx, StateIndices.ATT_IDX_ORIENTATION] = entity['attributes']['orientation']
@@ -123,8 +122,8 @@ def assign_player_entities(state, assignment, player, player_index, entities_ten
 
 def assign_projectiles(state, assignment, projectiles):
     for i, projectile in enumerate(state['projectiles'].values()):
-        idx = assignment.projectile_mapping[i]
-        projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_TIME] =  projectile['time']
+        idx = assignment.get_projectile_index(projectile['id'])
+        projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_TIME] = projectile['time']
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_SPREAD] = projectile['spread']
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_RANGE] = projectile['range']
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_ORIENTATION] = projectile['orientation']
@@ -133,9 +132,11 @@ def assign_projectiles(state, assignment, projectiles):
         projectiles[idx, StateIndices.PROJECTILE_ATT_IDX_NUM_PROJECTILES] = len(projectile['sunk'])
 
 
-def game_state_to_numpy(state, player_number, assignment=None):
+def game_state_to_numpy(state, assignment=None):
     if assignment is None:
-        assignment = Assignment()
+        assignment = Assignment(state['player-number'])
+    elif assignment.get_player_index(state['player-number']) != 0:
+        raise Exception()
 
     training_dimensions = get_training_dimensions()
     ret = {
@@ -149,7 +150,7 @@ def game_state_to_numpy(state, player_number, assignment=None):
             state,
             assignment,
             player,
-            assignment.get_player_index(player, player_number),
+            assignment.get_player_index(player),
             ret['entities']
         )
 
@@ -161,17 +162,12 @@ def game_state_to_numpy(state, player_number, assignment=None):
     return ret
 
 
-def actions_to_numpy(state, actions, player_number, assignment):
-    training_dimensions = get_training_dimensions()
+def actions_to_numpy(actions, assignment):
+    training_dimensions = get_training_dimensions()['actions']
     actions_mat = np.zeros(training_dimensions['actions'])
-    player_idx = assignment.get_player_index(player_number, player_number)
-    entity_idxs = {
-        entity['id']: idx
-        for idx, entity in enumerate(state['entities-by-player'][player_idx].values())
-    }
 
     for entity_id, action in actions.items():
-        entity_idx = assignment.entity_mapping[player_idx, entity_idxs[entity_id]]
+        entity_idx = assignment.get_entity_index(0, entity_id)
         actions_mat[entity_idx] = create_action_vector(action)
 
     return {
