@@ -5,20 +5,9 @@ http://inoryy.com/post/tensorflow2-deep-reinforcement-learning/
 
 import gym
 import logging
-import argparse
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import tensorflow.keras.layers as kl
-import tensorflow.keras.losses as kls
-import tensorflow.keras.optimizers as ko
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-b', '--batch_size', type=int, default=64)
-parser.add_argument('-n', '--num_updates', type=int, default=250)
-parser.add_argument('-lr', '--learning_rate', type=float, default=7e-3)
-parser.add_argument('-r', '--render_test', action='store_true', default=False)
-parser.add_argument('-p', '--plot_results', action='store_true', default=False)
 
 
 class ProbabilityDistribution(tf.keras.Model):
@@ -31,11 +20,11 @@ class Model(tf.keras.Model):
 	def __init__(self, num_actions):
 		super().__init__('mlp_policy')
 		# Note: no tf.get_variable(), just simple Keras API!
-		self.hidden1 = kl.Dense(128, activation='relu')
-		self.hidden2 = kl.Dense(128, activation='relu')
-		self.value = kl.Dense(1, name='value')
+		self.hidden1 = tf.keras.layers.Dense(128, activation='relu')
+		self.hidden2 = tf.keras.layers.Dense(128, activation='relu')
+		self.value = tf.keras.layers.Dense(1, name='value')
 		# Logits are unnormalized log probabilities.
-		self.logits = kl.Dense(num_actions, name='policy_logits')
+		self.logits = tf.keras.layers.Dense(num_actions, name='policy_logits')
 		self.dist = ProbabilityDistribution()
 
 	def call(self, inputs, **kwargs):
@@ -65,7 +54,7 @@ class A2CAgent:
 
 		self.model = model
 		self.model.compile(
-			optimizer=ko.RMSprop(lr=lr),
+			optimizer=tf.keras.optimizers.RMSprop(lr=lr),
 			# Define separate losses for policy logits and value estimate.
 			loss=[self._logits_loss, self._value_loss])
 
@@ -123,21 +112,21 @@ class A2CAgent:
 
 	def _value_loss(self, returns, value):
 		# Value loss is typically MSE between value estimates and returns.
-		return self.value_c * kls.mean_squared_error(returns, value)
+		return self.value_c * tf.keras.losses.mean_squared_error(returns, value)
 
 	def _logits_loss(self, actions_and_advantages, logits):
 		# A trick to input actions and advantages through the same API.
 		actions, advantages = tf.split(actions_and_advantages, 2, axis=-1)
 		# Sparse categorical CE loss obj that supports sample_weight arg on `call()`.
 		# `from_logits` argument ensures transformation into normalized probabilities.
-		weighted_sparse_ce = kls.SparseCategoricalCrossentropy(from_logits=True)
+		weighted_sparse_ce = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 		# Policy loss is defined by policy gradients, weighted by advantages.
 		# Note: we only calculate the loss on the actions we've actually taken.
 		actions = tf.cast(actions, tf.int32)
 		policy_loss = weighted_sparse_ce(actions, logits, sample_weight=advantages)
 		# Entropy loss can be calculated as cross-entropy over itself.
 		probs = tf.nn.softmax(logits)
-		entropy_loss = kls.categorical_crossentropy(probs, probs)
+		entropy_loss = tf.keras.losses.categorical_crossentropy(probs, probs)
 		# We want to minimize policy and maximize entropy losses.
 		# Here signs are flipped because the optimizer minimizes.
 		return policy_loss - self.entropy_c * entropy_loss
