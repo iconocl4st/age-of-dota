@@ -45,9 +45,8 @@ ui/build/*.h
 
 **/__pycache__
 
-output/saved_networks/*.png
-output/saved_networks/value_function*
-output/saved_networks/checkpoint
+output/saved_networks/*/
+
 backtrace.dump
 
 
@@ -56,5 +55,7 @@ ai/.idea/misc.xml
 ai/.idea/modules.xml
 ai/.idea/other.xml
 ai/.idea/vcs.xml
+
+
 
 	
