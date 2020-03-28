@@ -1,41 +1,37 @@
 
 from .fake_env import FakeEnv
+from .aim_env import AimEnv
 
 
 class Envs:
 	fake_env = FakeEnv()
-
-
-def _compile(arch):
-	return {
-		**arch,
-		'layers-by-name': {layer['name']: layer for layer in arch['layers']}
-	}
+	aim_env = AimEnv()
 
 
 class Architectures:
-	fake_arch = _compile({
-		'name': 'face_environment',
+	fake_arch = {
+		'name': 'fake_environment',
 		'save-path': '/home/thallock/Documents/CLionProjects/age-of-dota/output/saved_networks/fake',
-		'layers': [{
-			'name': 'hidden1',
+		'actions': Envs.fake_env.action_space,
+		'state': Envs.fake_env.state_space,
+		'hidden-layers': [{
 			'type': 'dense',
 			'activation': 'relu',
 			'width': 128,
-		}, {
-			'name': 'hidden2',
-			'type': 'dense',
-			'activation': 'relu',
-			'width': 128,
-		}, {
-			'name': 'value',
-			'type': 'dense',
-			'activation': None,
-			'width': 1,
-		}, {
-			'name': 'policy_logits',
-			'type': 'dense',
-			'width': 10,
-			'activation': None
 		}]
-	})
+	}
+	aim_arch = {
+		'name': 'aim_environment',
+		'save-path': '/home/thallock/Documents/CLionProjects/age-of-dota/output/saved_networks/aim',
+		'actions': Envs.aim_env.action_space,
+		'state': Envs.aim_env.state_space,
+		'hidden-layers': [{
+			'type': 'dense',
+			'activation': 'relu',
+			'width': 128,
+		}, {
+			'type': 'dense',
+			'activation': 'relu',
+			'width': 128,
+		}]
+	}

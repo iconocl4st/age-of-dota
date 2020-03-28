@@ -18,14 +18,18 @@ def main():
 	num_updates = 500
 	learning_rate = 1e-3
 
-	env = Envs.fake_env
+	#env = Envs.fake_env
+	env = Envs.aim_env
+	# arch = Architectures.fake_arch
+	arch = Architectures.aim_arch
 
 	logging.getLogger().setLevel(logging.INFO)
 
-	model = load_model(Architectures.fake_arch, learning_rate)
+	# model = load_model(, learning_rate)
+	model = load_model(arch, learning_rate)
 
 	train(model, env, batch_size, num_updates)
-	save_model(Architectures.fake_arch, model)
+	save_model(arch, model)
 
 	plt.style.use('seaborn')
 	plt.plot(np.arange(0, len(model.rewards_history), 10), model.rewards_history[::10])

@@ -8,16 +8,20 @@ from app.game_state import get_training_dimensions, actions_to_numpy
 from app.game_state import game_state_to_numpy
 
 
-def add_dense_layers(width, height, nn):
+def add_dense_layers(width, height, nn, name=None):
+	if name is None:
+		name = ''
+	else:
+		name = name + '_'
 	if isinstance(width, list):
 		for w in width:
 			for i in range(height):
-				nn = tf.keras.layers.Dense(w, activation='relu')(nn)
-				nn = tf.keras.layers.Dropout(0.2)(nn)
+				nn = tf.keras.layers.Dense(w, activation='relu', name=str(name) + 'the_meat_dense_' + str(w) + '_' + str(i))(nn)
+				nn = tf.keras.layers.Dropout(0.2, name=str(name) + 'the_meat_dropout_' + str(w) + '_' + str(i))(nn)
 	else:
 		for i in range(height):
-			nn = tf.keras.layers.Dense(width, activation='relu')(nn)
-			nn = tf.keras.layers.Dropout(0.2)(nn)
+			nn = tf.keras.layers.Dense(width, activation='relu', name=str(name) + 'the_meat_dense_' + str(i))(nn)
+			nn = tf.keras.layers.Dropout(0.2, name=str(name) + 'the_meat_dropout_' + str(i))(nn)
 	return nn
 
 
@@ -64,5 +68,5 @@ def get_nn_inputs(input_obj):
 			name=input_key
 		)
 		inputs.append(input_layer)
-		input_ends.append(tf.keras.layers.Flatten()(input_layer))
+		input_ends.append(tf.keras.layers.Flatten(name='flattened_' + input_key)(input_layer))
 	return inputs, input_ends

@@ -15,6 +15,7 @@ from .set_memory import MemorySetter
 class PolicyHolder:
     _PolicyFunction = None
     _PolicyOutputs = None
+    _LossStubs = None
 
     @classmethod
     def _ensure_initialized(cls):
@@ -22,7 +23,7 @@ class PolicyHolder:
             return
 
         MemorySetter.set_memory_usage()
-        cls._PolicyFunction, cls._PolicyOutputs = construct_policy()
+        cls._PolicyFunction, cls._PolicyOutputs, cls._LossStubs = construct_policy()
 
         if os.path.exists(PolicyHolder.get_save_path() + '.index'):
             try:
@@ -39,6 +40,11 @@ class PolicyHolder:
     def get_policy_outputs(cls):
         cls._ensure_initialized()
         return cls._PolicyOutputs
+
+    @classmethod
+    def get_loss_stubs(cls):
+        cls._ensure_initialized()
+        return cls._LossStubs
 
     @staticmethod
     def get_save_path():
@@ -75,7 +81,7 @@ def construct_policy():
 
     x = tf.keras.layers.Concatenate()(input_ends)
 
-    x = add_dense_layers(128, 3, x)
+    x = add_dense_layers(128, 3, x, name='policy')
 
     last_layer = x
 
@@ -93,5 +99,5 @@ def construct_policy():
 
     model = tf.keras.Model(inputs=inputs + action_inputs, outputs=[o for o in outputs.values()], name='ai_policy_function')
     tf.keras.utils.plot_model(model, 'output/saved_networks/policy_function.png', rankdir='LR', show_shapes=True)
-    return model, [k for k in outputs.keys()]
+    return model, [k for k in outputs.keys()], action_ends
 

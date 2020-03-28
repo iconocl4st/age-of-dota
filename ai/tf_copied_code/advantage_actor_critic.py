@@ -37,56 +37,81 @@ def logits_loss(actions_and_advantages, logits):
 	return policy_loss - AgentConfig.entropy_c * entropy_loss
 
 
-def returns_advantages(rewards, dones, values, next_value):
+def returns_advantages(reward, expected_return, dones, next_expected_return):
 	# `next_value` is the bootstrap value estimate of the future state (critic).
-	returns = np.append(np.zeros_like(rewards), next_value, axis=-1)
+	returns = np.append(np.zeros_like(reward), next_expected_return, axis=-1)
 	# Returns are calculated as discounted sum of future rewards.
-	for t in reversed(range(rewards.shape[0])):
-		returns[t] = rewards[t] + AgentConfig.gamma * returns[t + 1] * (1 - dones[t])
+	for t in reversed(range(reward.shape[0])):
+		returns[t] = reward[t] + AgentConfig.gamma * returns[t + 1] * (1 - dones[t])
 	returns = returns[:-1]
 	# Advantages are equal to returns - baseline (value estimates in our case).
-	advantages = returns - values
+	advantages = returns - expected_return
 	return returns, advantages
 
 
 def action_value(model, obs):
 	# Executes `call()` under the hood.
-	logits, value = model.predict_on_batch(obs)
-	action = model.dist.predict_on_batch(logits)
+	all_outputs = model.predict_on_batch(obs)
 	# Another way to sample actions:
 	#   action = tf.random.categorical(logits, 1)
 	# Will become clearer later why we don't use it.
-	return np.squeeze(action, axis=-1), np.squeeze(value, axis=-1)
+	return [
+		np.squeeze(all_outputs[0], axis=-1),  # value
+		np.squeeze(all_outputs[1], axis=-1),  # return
+	] + [
+		tf.squeeze(tf.squeeze(tf.random.categorical(action, 1) if a['type'] == 'logit' else action, axis=-1), axis=-1)
+		for action, a in zip(all_outputs[2:], model.actions)
+	]
 
 
 def train(model, env, batch_size=64, updates=250):
-	actions = np.empty((batch_size,), dtype=np.int32)
+	observations = [
+		np.empty((batch_size,) + state['shape'])
+		for state in model.states
+	]
+	expected_return = np.empty((batch_size,), dtype=np.float32)
 	rewards = np.empty((batch_size,), dtype=np.float32)
+	actions = [
+		np.empty((batch_size,), dtype=np.int32) if action['type'] == 'logit' else
+		np.empty((batch_size,) + action['shape'], dtype=np.float32)
+		for action in model.actions
+	]
 	dones = np.empty((batch_size,), dtype=np.bool)
-	values = np.empty((batch_size,), dtype=np.float32)
 
-	observations = np.empty((batch_size,) + env.observation_space.shape)
-	training_rewards = [0.0]
-	next_obs = env.reset()
+	training_cum_rewards = [0.0]
+	next_observations = env.reset()
 	for update in range(updates):
 		for step in range(batch_size):
-			observations[step] = next_obs.copy()
-			actions[step], values[step] = action_value(model, next_obs[None, :])
-			next_obs, rewards[step], dones[step], _ = env.step(actions[step])
+			for observation, next_observation in zip(observations, next_observations):
+				observation[step] = next_observation
+			model_output = action_value(model, [o[None, :] for o in next_observations])
+			expected_return[step] = model_output[1]
+			for idx in range(len(actions)):
+				actions[idx][step] = model_output[2 + idx]
 
-			training_rewards[-1] += rewards[step]
+			next_observations, rewards[step], dones[step] = env.step(model_output[2:])
+
+			training_cum_rewards[-1] += rewards[step]
 			if dones[step]:
-				training_rewards.append(0.0)
-				next_obs = env.reset()
-				logging.info("Episode: %03d, Reward: %03f" % (len(training_rewards) - 1, training_rewards[-2]))
+				training_cum_rewards.append(0.0)
+				next_observations = env.reset()
+				logging.info("Episode: %03d, Reward: %03f" % (len(training_cum_rewards) - 1, training_cum_rewards[-2]))
 
-		_, next_value = action_value(model, next_obs[None, :])
-		returns, advs = returns_advantages(rewards, dones, values, next_value)
-		# A trick to input actions and advantages through same API.
-		acts_and_advs = np.concatenate([actions[:, None], advs[:, None]], axis=-1)
+		next_expected_return = action_value(model, [o[None, :] for o in next_observations])[1]
+
+		returns, advs = returns_advantages(rewards, expected_return, dones, next_expected_return)
+
+		training_output = [
+			np.random.random((batch_size,)),  # value
+			returns,  # return
+		] + [
+			np.concatenate([action[:, None], advs[:, None]], axis=-1)
+			for action in actions
+		]
+
 		# Performs a full training step on the collected batch.
 		# Note: no need to mess around with gradients, Keras API handles it.
-		losses = model.train_on_batch(observations, [acts_and_advs, returns])
+		losses = model.train_on_batch(observations, training_output)
 		logging.debug("[%d/%d] Losses: %s" % (update + 1, updates, losses))
 
-	model.rewards_history += training_rewards
+	model.rewards_history += training_cum_rewards

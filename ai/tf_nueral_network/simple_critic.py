@@ -42,8 +42,8 @@ def construct_critic():
     action_inputs, action_input_ends = get_nn_inputs(training_dimensions['actions'])
 
     x = tf.keras.layers.Concatenate()(state_input_ends + action_input_ends)
-    x = add_dense_layers(128, 3, x)
-    x = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+    x = add_dense_layers(128, 3, x, name='critic')
+    x = tf.keras.layers.Dense(1, activation='sigmoid', name='the_output')(x)
 
     model = tf.keras.Model(inputs=state_inputs + action_inputs, outputs=x, name='ai_critic_function')
     tf.keras.utils.plot_model(model, 'output/saved_networks/critic_function.png', rankdir='LR', show_shapes=True)

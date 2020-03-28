@@ -20,27 +20,84 @@ def _create_layer(layer_obj):
 
 def _hash_model(model_arch):
 	m = hashlib.md5()
-	for layer in model_arch['layers']:
-		m.update(json.dumps(layer).encode(encoding='UTF-8'))
+	for o in model_arch['actions']:
+		m.update(json.dumps(o, indent=2).encode(encoding='UTF-8'))
+	m.update("::::".encode(encoding='UTF-8'))
+	for o in model_arch['state']:
+		m.update(json.dumps(o, indent=2).encode(encoding='UTF-8'))
+	m.update("::::".encode(encoding='UTF-8'))
+	for o in model_arch['hidden-layers']:
+		m.update(json.dumps(o, indent=2).encode(encoding='UTF-8'))
+	m.update("::::".encode(encoding='UTF-8'))
 	return m.hexdigest()
 
 
-def _compile(model, learning_rate):
+def _compile(model, learning_rate, actions):
 	model.compile(
 		optimizer=tf.keras.optimizers.RMSprop(lr=learning_rate),
 		# Define separate losses for policy logits and value estimate.
-		loss=[logits_loss, value_loss]
+		loss=[value_loss, value_loss] + [
+			logits_loss if action['type'] == 'logit' else value_loss
+			for action in actions
+		]
 	)
 	return model
 
 
-def _create_empty_model(model_arch, learning_rate):
-	ret = {}
-	for layer_obj in model_arch['layers']:
-		layer = _create_layer(layer_obj)
-		ret[layer_obj['name']] = layer
+def _create_a_hidden(model_arch, name, last_shape):
+	ret = []
+	for idx, desc in enumerate(model_arch['hidden-layers']):
+		ret.append(_create_layer({
+			**desc,
+			'name': 'hidden_' + name + '_' + str(idx)
+		}))
 
-	model = Model(ret)
+	ret.append(tf.keras.layers.Dense(np.prod(last_shape), name='last_dense_' + name))
+	ret.append(tf.keras.layers.Reshape(last_shape, name='output_' + name))
+	return ret
+
+
+def _eval_tensors(tensors, x):
+	for layer in tensors:
+		x = layer(x)
+	return x
+
+
+class Model(tf.keras.Model):
+	def __init__(self, networks, actions, states):
+		super().__init__('mlp_policy')
+		self.networks = networks
+		self.actions = actions
+		self.states = states
+
+	def call(self, inputs, **kwargs):
+		x = tf.convert_to_tensor(inputs)
+		return [
+			_eval_tensors(self.networks['value'], x),
+			_eval_tensors(self.networks['return'], x),
+		] + [
+			_eval_tensors(action_out, x)
+			for action_out in self.networks['actions']
+		]
+
+
+def _create_empty_model(model_arch, learning_rate):
+	model = Model(
+		{
+			'value': _create_a_hidden(model_arch, 'value', (1,)),
+			'return': _create_a_hidden(model_arch, 'return', (1,)),
+			'actions': [
+				_create_a_hidden(
+					model_arch,
+					action['name'],
+					(action['n'],) if action['type'] == 'logit' else action['shape']
+				)
+				for action in model_arch['actions']
+			],
+		},
+		model_arch['actions'],
+		model_arch['state']
+	)
 
 	model.rewards_history = []
 
@@ -57,33 +114,7 @@ def _create_empty_model(model_arch, learning_rate):
 		expand_nested=True
 	)
 
-	return _compile(model, learning_rate)
-
-
-# TODO:
-class ProbabilityDistribution(tf.keras.Model):
-	def call(self, logits, **kwargs):
-		# Sample a random categorical action from the given logits.
-		return tf.squeeze(tf.random.categorical(logits, 1), axis=-1)
-
-
-class Model(tf.keras.Model):
-	def __init__(self, layer_map):
-		super().__init__('mlp_policy')
-
-		self.hidden1 = layer_map['hidden1']
-		self.hidden2 = layer_map['hidden2']
-		self.value = layer_map['value']
-		# Logits are unnormalized log probabilities.
-		self.logits = layer_map['policy_logits']
-		self.dist = ProbabilityDistribution()
-
-	def call(self, inputs, **kwargs):
-		# Inputs is a numpy array, convert to a tensor.
-		# Separate hidden layers from the same input tensor.
-		hidden_logs = self.hidden1(inputs)
-		hidden_vals = self.hidden2(inputs)
-		return self.logits(hidden_logs), self.value(hidden_vals)
+	return _compile(model, learning_rate, model_arch['actions'])
 
 
 def save_model(model_arch, model):
@@ -131,6 +162,9 @@ def load_model(model_arch, learning_rate):
 	else:
 		model.rewards_history = []
 
+	model.actions = model_arch['actions']
+	model.states = model_arch['state']
+
 	logging.info('successfully loaded model at ' + path)
 
-	return _compile(model, learning_rate)
+	return _compile(model, learning_rate, model_arch['actions'])

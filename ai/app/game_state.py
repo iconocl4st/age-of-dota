@@ -7,8 +7,10 @@ from .assignment import Assignment
 
 class StateIndices:
     ACTION_IDX = 0
+    # closely tied to the train actor file
     ACTION_IS_IDLE = ACTION_IDX; ACTION_IDX += 1
     ACTION_IS_COLLECT = ACTION_IDX; ACTION_IDX += 1
+    ACTION_COLLECT_RESOURCE = ACTION_IDX; ACTION_IDX += 1
     ACTION_IS_DEPOSIT = ACTION_IDX; ACTION_IDX += 1
     ACTION_DEPOSIT_RESOURCE = ACTION_IDX; ACTION_IDX += 1
     ACTION_IS_STRAFE = ACTION_IDX; ACTION_IDX += 1

@@ -49,6 +49,12 @@ void ServerGameHandler::handleMessage(MessageHandlingArgs& args) {
 		}
 		case aod::common::message::AI_ACTIONS_SENT:
 		{
+			bool hasProjections = args.reader.readBoolean("has-projections");
+			if (hasProjections) {
+				args.reader.readDouble("expected-rewards");
+				args.reader.readDouble("current-value");
+			}
+
 			if (game) {
 				game->receivedAiReady(args.connectionContext.name);
 			}

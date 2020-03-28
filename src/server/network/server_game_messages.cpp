@@ -46,12 +46,18 @@ void sendDeleteEntity(ConnectionContext *connection, EntityId entityId) {
 	connection->writer.writeEndObject();
 }
 
-void sendEntityChangedAction(ConnectionContext *context, EntityId entityId, std::shared_ptr<aod::common::action::Action> action) {
+void sendEntityChangedAction(
+	ConnectionContext *context,
+	EntityId entityId,
+	std::shared_ptr<aod::common::action::Action> action,
+	bool isRequested
+) {
 	std::unique_lock<std::recursive_mutex> lock{context->writeLock};
 
 	context->writer.writeBeginObject();
 	context->writer.writeInt("message-type", aod::common::message::ENTITY_ACTION_CHANGED);
 	context->writer.writeInt("entity-id", entityId);
+	context->writer.writeBoolean("was-requested", isRequested);
 	aod::common::action::sendAction("action", context->writer, action);
 	context->writer.writeEndObject();
 }

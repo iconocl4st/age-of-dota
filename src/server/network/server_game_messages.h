@@ -22,7 +22,12 @@ void sendApplyDamage(ConnectionContext *context, EntityId entityId, DamageInstan
 void sendDeleteEntity(ConnectionContext *context, EntityId entityId, double newHealth, bool dies);
 
 void sendChangeEntityMovement(ConnectionContext *context, EntityId entityId, Movement& movement);
-void sendEntityChangedAction(ConnectionContext *context, EntityId entityId, std::shared_ptr<aod::common::action::Action> action);
+void sendEntityChangedAction(
+	ConnectionContext *context,
+	EntityId entityId,
+	std::shared_ptr<aod::common::action::Action> action,
+	bool isRequested
+);
 
 void sendGameTime(ConnectionContext *context, GameTime gameTime, std::chrono::high_resolution_clock::time_point& tickTime);
 

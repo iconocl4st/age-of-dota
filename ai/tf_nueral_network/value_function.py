@@ -41,7 +41,7 @@ def construct_value_function():
     inputs, input_ends = get_nn_inputs(training_dimensions['state'])
 
     x = tf.keras.layers.Concatenate()(input_ends)
-    x = add_dense_layers([1024, 512, 128], 1, x)
+    x = add_dense_layers([1024, 512, 128], 1, x, name='value')
     x = tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
     model = tf.keras.Model(inputs=inputs, outputs=x, name='ai_value_function')
