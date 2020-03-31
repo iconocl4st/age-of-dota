@@ -13,9 +13,31 @@ from tf_copied_code.model_io import save_model
 from tf_copied_code.advantage_actor_critic import train
 
 
+logging_is_initialized = False
+
+
+def initializing_logging():
+	global logging_is_initialized
+
+	if logging_is_initialized:
+		return
+	logging_is_initialized = True
+
+	logging.getLogger().setLevel(logging.DEBUG)
+	fh = logging.FileHandler('/home/thallock/Documents/CLionProjects/age-of-dota/output/spam.log')
+	fh.setLevel(logging.DEBUG)
+	logging.getLogger().addHandler(fh)
+
+	ch = logging.StreamHandler()
+	ch.setLevel(logging.INFO)
+	logging.getLogger().addHandler(ch)
+
+
 def main():
-	batch_size = 64
-	num_updates = 500
+	initializing_logging()
+
+	batch_size = 32
+	num_updates = 100
 	learning_rate = 1e-3
 
 	#env = Envs.fake_env
@@ -23,13 +45,11 @@ def main():
 	# arch = Architectures.fake_arch
 	arch = Architectures.aim_arch
 
-	logging.getLogger().setLevel(logging.INFO)
-
 	# model = load_model(, learning_rate)
 	model = load_model(arch, learning_rate)
 
 	train(model, env, batch_size, num_updates)
-	save_model(arch, model)
+	save_model(model)
 
 	plt.style.use('seaborn')
 	plt.plot(np.arange(0, len(model.rewards_history), 10), model.rewards_history[::10])

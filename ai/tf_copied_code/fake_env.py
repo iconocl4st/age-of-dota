@@ -10,14 +10,14 @@ class FakeEnv:
 		}]
 		self.state_space = [{
 			'name': 'want',
-			'shape': (15,),
-			'type': 'numbers'
+			'shape': (15,)
 		}]
+		self.helpers = []
 		self.counter = 0
 		self.want = 0
 
 	def reset(self):
-		next_state, _, _ = self.step([0])
+		next_state, _, _, _ = self.step([0])
 		self.counter = 0
 		return next_state
 
@@ -31,6 +31,7 @@ class FakeEnv:
 			[s],
 			(2 + np.random.random() if actions[0] == wanted else 0.0) + np.random.random(),
 			self.counter > 100,
+			[]
 		)
 
 	def render(self):

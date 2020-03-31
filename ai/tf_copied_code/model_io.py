@@ -4,18 +4,20 @@ import hashlib
 import json
 import numpy as np
 import logging
+import datetime
 
 from .advantage_actor_critic import logits_loss
 from .advantage_actor_critic import value_loss
+from .advantage_actor_critic import action_loss
+from .advantage_actor_critic import supplementary_loss
 
 
-def _create_layer(layer_obj):
-	if layer_obj['type'] == 'dense':
-		return tf.keras.layers.Dense(
-			layer_obj['width'],
-			activation=layer_obj['activation'],
-			name=layer_obj['name']
-		)
+class ModelWrapper:
+	def __init__(self):
+		self.model = None
+		self.arch = None
+		self.rewards_history = None
+		self.tb_writer = None
 
 
 def _hash_model(model_arch):
@@ -29,103 +31,106 @@ def _hash_model(model_arch):
 	for o in model_arch['hidden-layers']:
 		m.update(json.dumps(o, indent=2).encode(encoding='UTF-8'))
 	m.update("::::".encode(encoding='UTF-8'))
+	for o in model_arch['supplementary-info']:
+		m.update(json.dumps(o, indent=2).encode(encoding='UTF-8'))
 	return m.hexdigest()
 
 
-def _compile(model, learning_rate, actions):
-	model.compile(
+def _compile(wrapper, learning_rate):
+	log_dir = '/home/thallock/Documents/CLionProjects/age-of-dota/output/tensorboard/'
+	log_dir = os.path.join(log_dir, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+	tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+	tensorboard_callback.set_model(wrapper.model)
+
+	values_file = os.path.join(log_dir, 'values')
+	wrapper.tb_writer = tf.summary.create_file_writer(values_file)
+
+	wrapper.model.compile(
 		optimizer=tf.keras.optimizers.RMSprop(lr=learning_rate),
-		# Define separate losses for policy logits and value estimate.
 		loss=[value_loss, value_loss] + [
-			logits_loss if action['type'] == 'logit' else value_loss
-			for action in actions
+			logits_loss if action['type'] == 'logit' else action_loss
+			for action in wrapper.arch['actions']
+		] + [
+			supplementary_loss
+			for _ in wrapper.arch['supplementary-info']
 		]
 	)
-	return model
-
-
-def _create_a_hidden(model_arch, name, last_shape):
-	ret = []
-	for idx, desc in enumerate(model_arch['hidden-layers']):
-		ret.append(_create_layer({
-			**desc,
-			'name': 'hidden_' + name + '_' + str(idx)
-		}))
-
-	ret.append(tf.keras.layers.Dense(np.prod(last_shape), name='last_dense_' + name))
-	ret.append(tf.keras.layers.Reshape(last_shape, name='output_' + name))
-	return ret
-
-
-def _eval_tensors(tensors, x):
-	for layer in tensors:
-		x = layer(x)
-	return x
-
-
-class Model(tf.keras.Model):
-	def __init__(self, networks, actions, states):
-		super().__init__('mlp_policy')
-		self.networks = networks
-		self.actions = actions
-		self.states = states
-
-	def call(self, inputs, **kwargs):
-		x = tf.convert_to_tensor(inputs)
-		return [
-			_eval_tensors(self.networks['value'], x),
-			_eval_tensors(self.networks['return'], x),
-		] + [
-			_eval_tensors(action_out, x)
-			for action_out in self.networks['actions']
-		]
 
 
 def _create_empty_model(model_arch, learning_rate):
-	model = Model(
-		{
-			'value': _create_a_hidden(model_arch, 'value', (1,)),
-			'return': _create_a_hidden(model_arch, 'return', (1,)),
-			'actions': [
-				_create_a_hidden(
-					model_arch,
-					action['name'],
-					(action['n'],) if action['type'] == 'logit' else action['shape']
-				)
-				for action in model_arch['actions']
-			],
-		},
-		model_arch['actions'],
-		model_arch['state']
-	)
+	input_layers = {}
+	flattened = []
+	for state_entry in model_arch['state']:
+		input_layer = tf.keras.Input(shape=state_entry['shape'], name='input-' + state_entry['name'])
+		input_layers[state_entry['name']] = input_layer
+		flattened.append(tf.keras.layers.Flatten(name='flatten-' + state_entry['name'])(input_layer))
 
-	model.rewards_history = []
+	x = tf.keras.layers.Concatenate(name='concat-inputs')(flattened)
+
+	for idx, desc in enumerate(model_arch['hidden-layers']):
+		if desc['type'] == 'dense':
+			x = tf.keras.layers.Dense(
+				desc['width'],
+				activation=desc['activation'],
+				name='hidden-' + str(idx) + '-dense'
+			)(x)
+			x = tf.keras.layers.Dropout(rate=0.2, name='hidden-' + str(idx) + '-dropout')(x)
+		else:
+			raise Exception()
+
+	outputs = [
+		tf.keras.layers.Dense(1, activation='relu', name='value')(x),
+		tf.keras.layers.Dense(1, activation='relu', name='return')(x),
+	]
+
+	for action in model_arch['actions']:
+		if action['type'] == 'logit':
+			shape = (action['n'], )
+		else:
+			shape = (action['n'], 2,)
+		action_out = tf.keras.layers.Dense(np.prod(shape), activation='relu', name='dense-' + action['name'])(x)
+		action_out = tf.keras.layers.Reshape(shape, name='output-' + action['name'])(action_out)
+		outputs.append(action_out)
+
+	for sup in model_arch['supplementary-info']:
+		sup_out = tf.keras.layers.Dense(np.prod(sup['shape']), activation='linear', name='dense-sup-' + sup['name'])(x)
+		sup_out = tf.keras.layers.Reshape(sup['shape'], name='output-' + sup['name'])(sup_out)
+		outputs.append(sup_out)
+
+	wrapper = ModelWrapper()
+	wrapper.model = tf.keras.Model(
+		inputs=input_layers,
+		outputs=outputs,
+		name=model_arch['name']
+	)
+	wrapper.rewards_history = []
+	wrapper.arch = model_arch
 
 	path = model_arch['save-path']
 	if not os.path.exists(path):
 		os.mkdir(path)
 
 	tf.keras.utils.plot_model(
-		model,
+		wrapper.model,
 		to_file=os.path.join(path, 'model.png'),
 		rankdir='LR',
 		show_shapes=True,
 		show_layer_names=True,
 		expand_nested=True
 	)
+	_compile(wrapper, learning_rate)
+	return wrapper
 
-	return _compile(model, learning_rate, model_arch['actions'])
 
-
-def save_model(model_arch, model):
-	path = model_arch['save-path']
+def save_model(wrapper):
+	path = wrapper.arch['save-path']
 	if not os.path.exists(path):
 		os.mkdir(path)
 	with open(os.path.join(path, 'architecture.json'), "w") as ma:
-		json.dump(model_arch, ma, indent=2)
+		json.dump(wrapper.arch, ma, indent=2)
 	with open(os.path.join(path, 'rewards.json'), 'w') as rewards_out:
-		json.dump(model.rewards_history, rewards_out, indent=2)
-	model.save(path)
+		json.dump(wrapper.rewards_history, rewards_out, indent=2)
+	wrapper.model.save(path)
 	logging.info('successfully saved model at ' + path)
 
 
@@ -149,8 +154,10 @@ def load_model(model_arch, learning_rate):
 			logging.info('detected change in model at ' + path)
 			return _create_empty_model(model_arch, learning_rate)
 
+	wrapper = ModelWrapper()
+	wrapper.arch = model_arch
 	try:
-		model = tf.keras.models.load_model(path, compile=False)
+		wrapper.model = model = tf.keras.models.load_model(path, compile=False)
 	except:
 		logging.info('exception while loading model ' + path)
 		return _create_empty_model(model_arch, learning_rate)
@@ -158,13 +165,11 @@ def load_model(model_arch, learning_rate):
 	rewards_path = os.path.join(path, 'rewards.json')
 	if os.path.exists(rewards_path):
 		with open(rewards_path, 'r') as rewards_in:
-			model.rewards_history = json.load(rewards_in)
+			wrapper.rewards_history = json.load(rewards_in)
 	else:
-		model.rewards_history = []
-
-	model.actions = model_arch['actions']
-	model.states = model_arch['state']
+		wrapper.rewards_history = []
 
 	logging.info('successfully loaded model at ' + path)
+	_compile(wrapper, learning_rate)
 
-	return _compile(model, learning_rate, model_arch['actions'])
+	return wrapper

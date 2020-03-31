@@ -14,6 +14,7 @@ class Architectures:
 		'save-path': '/home/thallock/Documents/CLionProjects/age-of-dota/output/saved_networks/fake',
 		'actions': Envs.fake_env.action_space,
 		'state': Envs.fake_env.state_space,
+		'supplementary-info': Envs.fake_env.helpers,
 		'hidden-layers': [{
 			'type': 'dense',
 			'activation': 'relu',
@@ -25,13 +26,14 @@ class Architectures:
 		'save-path': '/home/thallock/Documents/CLionProjects/age-of-dota/output/saved_networks/aim',
 		'actions': Envs.aim_env.action_space,
 		'state': Envs.aim_env.state_space,
+		'supplementary-info': Envs.aim_env.helpers,
 		'hidden-layers': [{
 			'type': 'dense',
 			'activation': 'relu',
-			'width': 128,
+			'width': 64,
 		}, {
 			'type': 'dense',
 			'activation': 'relu',
-			'width': 128,
+			'width': 64,
 		}]
 	}
