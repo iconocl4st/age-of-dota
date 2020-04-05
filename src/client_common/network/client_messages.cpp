@@ -92,6 +92,7 @@ void parseDeleteEntity(JsonReader &reader, aod::common::state::CommonState& shar
 
 EntityId parseActionChanged(JsonReader &reader, aod::common::state::CommonState &sharedState) {
 	EntityId entityId = reader.readInt("entity-id");
+	reader.readBoolean("was-requested");
 	std::shared_ptr<aod::common::action::Action> a;
 	aod::common::action::parseAction("action", reader, a);
 	aod::common::state::setAction(sharedState, entityId, a);
@@ -144,7 +145,7 @@ void parseEntityReceivedDamage(JsonReader& reader, aod::common::state::CommonSta
 	aod::common::state::apply_damage(sharedState, entityId, instance);
 }
 
-void parseGameTime(JsonReader &reader, aod::common::state::CommonState &sharedState) {
+void parseTickBegin(JsonReader &reader, aod::common::state::CommonState &sharedState) {
 	GameTime time = reader.readDouble("current-time");
 	std::string timeString = reader.readString("tick-time");
 
@@ -160,6 +161,9 @@ void parseGameTime(JsonReader &reader, aod::common::state::CommonState &sharedSt
 	sharedState.lastTickTime = tickTime;
 }
 
+void parseTickEnd(JsonReader &reader, aod::common::state::CommonState &sharedState) {
+}
+
 void parseGameEnd(JsonReader &reader, GameResult &result) {
 	reader.readKey("result");
 	result.parse(&reader);
@@ -170,6 +174,7 @@ void sendAiActionsSent(ConnectionContext& context) {
 	std::unique_lock<std::recursive_mutex> lock{context.writeLock};
 	context.writer.writeBeginObject();
 	context.writer.writeInt("message-type", aod::common::message::AI_ACTIONS_SENT);
+	context.writer.writeBoolean("has-projections", false);
 	context.writer.writeEndObject();
 	context.writer.flush();
 }

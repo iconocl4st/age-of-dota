@@ -7,8 +7,8 @@ add_library(common_lib STATIC
         src/common/state/quad_tree/QuadTreeLeafNode.h
         src/common/state/quad_tree/QuadTreeBranchNode.h
 
-        src/common/state/QuadGrid.cpp
-        src/common/state/QuadGrid.h
+        src/common/state/quad_grid/QuadGrid.cpp
+        src/common/state/quad_grid/QuadGrid.h
         src/common/util/ThreadPool.cpp
         src/common/util/ThreadPool.h
         src/common/json/JsonDebuggable.cpp
@@ -113,5 +113,22 @@ add_library(common_lib STATIC
         src/common/util/signal_handler.cpp
         src/common/util/signal_handler.h
         src/common/state/Actions.cpp
+
+        src/common/spec/player_types.h
+
+        src/common/state/quad_tree2/NearestEntitySearchResults.cpp
+        src/common/state/quad_tree2/NearestEntitySearchResults.h
+
+        src/common/state/quad_grid/QuadGridNode.cpp
+        src/common/state/quad_grid/QuadGridNode.h
+        src/common/state/quad_grid/QuadGridBranchNode.cpp
+        src/common/state/quad_grid/QuadGridBranchNode.h
+        src/common/state/quad_grid/QuadGridLeafNode.cpp
+        src/common/state/quad_grid/QuadGridLeafNode.h
+        src/common/state/quad_grid/QuadGridFillerNode.cpp
+        src/common/state/quad_grid/QuadGridFillerNode.h
+        src/common/state/quad_grid/branch_direction.h
+
+        src/common/state/quad_grid/branch_directions.cpp
 
 )

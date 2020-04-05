@@ -106,7 +106,7 @@ void Lobby::setNumPlayers(int numPlayers) {
     }
 }
 
-void Lobby::setPlayerAsAi(int playerNumber, bool isAi) {
+void Lobby::setPlayerAsAi(int playerNumber, bool isAi, AiType aiType) {
     std::unique_lock<std::recursive_mutex> lock{mutex};
 
     if (playerNumber < 0 || playerNumber >= playerSlots.size()) {
@@ -119,10 +119,10 @@ void Lobby::setPlayerAsAi(int playerNumber, bool isAi) {
     }
     if (isAi) {
     	// TODO: We should accept another parameter...
-		if (false && playerNumber == 1) {
+		if (aiType == SCRIPT_AI) {
 			BOOST_LOG_SEV(logger, NORMAL) << "Launching native AI thread...";
 			aiThreads.push_back(std::make_shared<std::thread>(aiLauncher, name, playerNumber));
-		} else {
+		} else if (aiType == NUERAL_NETWORK) {
 			BOOST_LOG_SEV(logger, NORMAL) << "Launching AI process...";
 			aiThreads.push_back(std::make_shared<std::thread>(run_ai_script, serverSettings, name, playerNumber));
 		}

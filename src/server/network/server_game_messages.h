@@ -29,7 +29,9 @@ void sendEntityChangedAction(
 	bool isRequested
 );
 
-void sendGameTime(ConnectionContext *context, GameTime gameTime, std::chrono::high_resolution_clock::time_point& tickTime);
+
+void sendTickEnd(ConnectionContext *context);
+void sendTickBegin(ConnectionContext *context, GameTime gameTime, std::chrono::high_resolution_clock::time_point& tickTime);
 
 void sendProjectileLaunch(ConnectionContext *context, WeaponFire& fire);
 void sendProjectileUpdate(ConnectionContext *context, ProjectileId id, int projectileNum);

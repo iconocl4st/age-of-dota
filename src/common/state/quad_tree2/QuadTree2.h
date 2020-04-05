@@ -15,8 +15,7 @@
 #include "QuadTreePath.h"
 #include "QuadTreeBranchNode2.h"
 #include "QuadTreeLeafNode2.h"
-
-namespace aod::common::state { class CommonState; }
+#include "NearestEntitySearchResults.h"
 
 class QuadTree2 : public JsonDebuggable  {
 private:
@@ -54,6 +53,7 @@ public:
 
 	void visitLeaves(const Point& min, const Point& max, std::function<void(const Point& min, const Point& max)> visitor);
 
+	void getEntityAt(NearestEntityQuery& search, NearestEntityQueryResults& results);
 //	void visit()
 
 	void validate();

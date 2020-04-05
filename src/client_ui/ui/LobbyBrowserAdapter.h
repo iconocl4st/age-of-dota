@@ -37,7 +37,7 @@ public:
 
 	void setNumPlayers(int i);
 
-	void setPlayerAsAi(int i, bool b);
+	void setPlayerAsAi(int i, bool b, int type);
 };
 
 }

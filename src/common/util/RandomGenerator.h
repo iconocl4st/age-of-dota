@@ -20,6 +20,9 @@ public:
 		stddev{stddev},
 		minimum{minimum},
 		maximum{maximum} {}
+
+	TruncatedGaussian(double fixedValue) : TruncatedGaussian{fixedValue, 1.0, fixedValue, fixedValue} {}
+	TruncatedGaussian() : TruncatedGaussian{0.0} {}
 };
 
 

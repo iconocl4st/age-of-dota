@@ -35,7 +35,7 @@ void attack(aod::common::action::Attack *action, EntitySimInfo& simInfo) {
 	auto newAction = std::make_shared<aod::common::action::Idle>();
 	aod::common::state::setAction(simInfo.gState->sharedState, simInfo.entity, newAction);
 	simInfo.gState->broadcast([&simInfo, &newAction](ConnectionContext &c) -> void {
-		aod::server::message::sendEntityChangedAction(&c, simInfo.entity, newAction);
+		aod::server::message::sendEntityChangedAction(&c, simInfo.entity, newAction, false);
 	});
 }
 

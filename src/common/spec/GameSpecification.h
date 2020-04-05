@@ -34,6 +34,8 @@ public:
 
     double gameSpeed;
 
+
+    double maximumEntityRadius = 5;
     //  visibility
 
     std::vector<std::shared_ptr<ResourceSpec>> resources;

@@ -5,7 +5,10 @@
 #ifndef PLAYING_QUADGRID_H
 #define PLAYING_QUADGRID_H
 
-class QuadGridNode;
+
+#include "QuadGridNode.h"
+
+#include <mutex>
 
 enum Direction {
     NORTH,
@@ -15,14 +18,20 @@ enum Direction {
 };
 
 class QuadGrid {
+private:
     QuadGridNode *root;
     int numTypes;
+	int defaultType;
+
+	std::recursive_mutex mutex;
 
 public:
-    QuadGrid(int numTypes, int maxX, int maxY);
+    QuadGrid(int numTypes, int maxX, int maxY, int defaultType);
     ~QuadGrid();
 
     void set(int xmin, int ymin, int xmax, int ymax, int type);
+    int getType(int x, int y); // probably only used for debugging...
+
     int findNearest(int x, int y, Direction direction);
 
 };

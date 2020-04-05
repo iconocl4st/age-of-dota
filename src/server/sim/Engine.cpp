@@ -37,7 +37,7 @@ static void updateRequests(std::shared_ptr<ServerGameState> pState) {
 		validateAction(pState, it.second);
 		aod::common::state::setAction(pState->sharedState, it.first, it.second);
 		pState->broadcast([&it](ConnectionContext &c) -> void {
-			aod::server::message::sendEntityChangedAction(&c, it.first, it.second);
+			aod::server::message::sendEntityChangedAction(&c, it.first, it.second, true);
 		});
 	}
 	pState->incomingRequests.requestedActions.clear();
@@ -241,7 +241,10 @@ void runEngineLoop(aod::server::app::ServerContext& serverContext) {
 			state->sharedState.lastTickTime  = currentTime;
 
 			state->broadcast([newGameTime, &currentTime](ConnectionContext& context) -> void {
-				aod::server::message::sendGameTime(&context, newGameTime, currentTime);
+				aod::server::message::sendTickBegin(&context, newGameTime, currentTime);
+			});
+			state->broadcast([newGameTime, &currentTime](ConnectionContext& context) -> void {
+				aod::server::message::sendTickEnd(&context);
 			});
 
 			if (gameOver) {

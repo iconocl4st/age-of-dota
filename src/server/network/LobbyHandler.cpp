@@ -52,8 +52,9 @@ void LobbyHandler::handleMessage(MessageHandlingArgs& args) {
         case aod::common::message::SET_PLAYER_TO_AI: {
             int playerNumber = args.reader.readInt("player-number");
             bool isAi = args.reader.readBoolean("is-ai");
+            auto playerType = (AiType) args.reader.readInt("ai-type");
 			if (lobby != nullptr) {
-				lobby->setPlayerAsAi(playerNumber, isAi);
+				lobby->setPlayerAsAi(playerNumber, isAi, playerType);
 				lobby->updateClients();
 			} else {
 				BOOST_LOG_SEV(serverContext.logger, ERROR) << "Set to ai with no lobby present";

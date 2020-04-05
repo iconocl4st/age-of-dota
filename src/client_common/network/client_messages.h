@@ -42,7 +42,8 @@ void parseProjectileLaunch(JsonReader &reader, aod::common::state::CommonState &
 void parseProjectileUpdate(JsonReader& reader, aod::common::state::CommonState&  sharedState);
 void parseProjectileDestroy(JsonReader& reader, aod::common::state::CommonState&  sharedState);
 
-void parseGameTime(JsonReader &reader, aod::common::state::CommonState &sharedState);
+void parseTickBegin(JsonReader &reader, aod::common::state::CommonState &sharedState);
+void parseTickEnd(JsonReader &reader, aod::common::state::CommonState &sharedState);
 
 void parseGameEnd(JsonReader &reader, GameResult& result);
 

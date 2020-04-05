@@ -19,12 +19,12 @@ void onConnect(aod::client::app::UiClientContext &context) {
 	context.browserHandler.connect(lobbyName);
 	context.browserHandler.setSpectator(true);
 	context.browserHandler.setNumPlayers(2);
-	context.browserHandler.setPlayerAsAi(0, true);
+	context.browserHandler.setPlayerAsAi(0, true, SCRIPT_AI);
 
 	using namespace std::chrono_literals;
 	std::this_thread::sleep_for(1s);
 
-	context.browserHandler.setPlayerAsAi(1, true);
+	context.browserHandler.setPlayerAsAi(1, true, SCRIPT_AI);
 }
 
 void onReady(aod::client::app::UiClientContext &context) {

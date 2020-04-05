@@ -14,7 +14,7 @@
 #include "Actions.h"
 #include "../state/quad_tree/QuadTree.h"
 #include "../json/JsonDebuggable.h"
-#include "QuadGrid.h"
+#include "src/common/state/quad_grid/QuadGrid.h"
 #include "ResourceMap.h"
 #include "Point.h"
 #include "../spec/WeaponFire.h"

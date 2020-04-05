@@ -6,13 +6,9 @@
 #define PLAYING_PLAYERSLOT_H
 
 
+#include <src/common/spec/player_types.h>
 #include "../../common/network/ConnectionContext.h"
 
-enum PlayerType {
-    EMPTY = 0,
-    HUMAN = 1,
-    AI = 2,
-};
 
 const std::string INVALID = "invalid";
 

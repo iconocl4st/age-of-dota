@@ -139,6 +139,14 @@ void drawHealth(const Point &p, double maxHealth, double health, float boundingB
 	);
 }
 
+void renderHuman() {
+
+}
+
+void renderTree() {
+
+}
+
 void renderEntities(aod::client::app::UiClientContext& context, GameTime currentTime) {
 	auto &state = context.getGameState()->clientGameState.sharedState;
 

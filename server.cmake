@@ -47,7 +47,7 @@ add_library(server_lib STATIC
 
         src/server/app/ServerSettings.cpp
         src/server/app/ServerSettings.h
-)
+        src/server/actions/transfer.cpp src/server/actions/transfer.h)
 
 
 add_executable(

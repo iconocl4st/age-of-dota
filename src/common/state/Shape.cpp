@@ -55,6 +55,10 @@ bool Circle::intersectsRectangle(const Point &location, double orientation, cons
 	return (location - location.project(min, max)).norm() <= radius;
 }
 
+double Circle::distanceTo(const Point& location, double orientation, const Point& otherLocation) const {
+	return std::max(0.0, (location - otherLocation).norm() - radius);
+}
+
 bool Rectangle::isRotated(double orientation) {
 
 	return false;

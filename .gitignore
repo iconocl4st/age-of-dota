@@ -34,6 +34,8 @@
 output/*.json
 output/*.txt
 output/recorded_games/recorded_game_*
+output/tensorboard/
+output/spam.log
 .idea/*.xml
 .idea/codeStyles
 cmake-build-debug

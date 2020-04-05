@@ -33,6 +33,9 @@ add_executable(
         src/both/app/run_spectator_client.h
         src/both/app/test_stuff.cpp
 
+        src/common/state/quad_grid/test_quad_grid.cpp
+        src/common/state/quad_grid/test_quad_grid.h
+
         src/common/state/quad_tree2/test_quadtree.cpp
         src/common/state/quad_tree2/test_quadtree.h
 )
@@ -66,6 +69,7 @@ target_link_libraries(
         ${GLUT_LIBRARY}
         ${GLEW_LIBRARIES}
         ${Boost_LIBRARIES}
+        boost_system
         Qt5::Widgets
 
         ${CMAKE_DL_LIBS}

@@ -106,7 +106,7 @@ void LobbyBrowserAdapter::setNumPlayers(int i) {
 	}
 }
 
-void LobbyBrowserAdapter::setPlayerAsAi(int i, bool b) {
+void LobbyBrowserAdapter::setPlayerAsAi(int i, bool b, int type) {
 	auto connection = context.getConnection();
 
 	{
@@ -115,6 +115,7 @@ void LobbyBrowserAdapter::setPlayerAsAi(int i, bool b) {
 		connection->writer.writeInt("message-type", aod::common::message::SET_PLAYER_TO_AI);
 		connection->writer.writeInt("player-number", i);
 		connection->writer.writeBoolean("is-ai", b);
+		connection->writer.writeInt("ai-type", type);
 		connection->writer.writeEndObject();
 		connection->writer.flush();
 	}

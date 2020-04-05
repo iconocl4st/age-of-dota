@@ -7,6 +7,7 @@
 #include "QuadTreeLeafNode2.h"
 
 #include "../Entity.h"
+#include <utility>
 
 
 QuadTree2::QuadTree2(double xmin, double ymin, double xmax, double ymax, int maxDepth) :
@@ -281,6 +282,99 @@ QuadTree2::visitEntities(aod::common::state::CommonState& state, const Point &mi
 			}
 		}
 	});
+}
+
+namespace nrsteq {
+struct compare {
+	bool operator()(const std::pair<double, QuadTreeNode2 *>& o1, const std::pair<double, QuadTreeNode2 *>& o2) {
+		return o1.first < o2.first;
+	}
+};
+
+static void insertChild(
+	std::set<std::pair<double, QuadTreeNode2 *>, compare>& toVisit,
+	QuadTreeNode2 *child,
+	const Point& p,
+	NearestEntityQueryResults& results,
+	double maxRadius
+) {
+	if (child == nullptr) {
+		return;
+	}
+	double d = (child->project(p) - p).norm();
+	if (results.foundEntity && d > results.distance + maxRadius) {
+		return;
+	}
+	toVisit.insert(std::make_pair<double, QuadTreeNode2 *>((double) d, (QuadTreeNode2 *) child));
+}
+
+}
+
+void QuadTree2::getEntityAt(
+	NearestEntityQuery& query,
+	NearestEntityQueryResults& results
+) {
+	std::unique_lock<std::recursive_mutex> uniqueLock{mutex};
+
+	double maxRadius = query.state.specification->maximumEntityRadius;
+
+	results.distance = -1;
+	results.entityId = 0;
+	results.foundEntity = false;
+	results.intersects = false;
+
+	std::set<std::pair<double, QuadTreeNode2*>, nrsteq::compare> toVisit;
+	toVisit.insert(std::make_pair<double, QuadTreeNode2*>(0.0, (QuadTreeNode2*) root));
+
+	while (!toVisit.empty()) {
+		auto it = toVisit.begin();
+		QuadTreeNode2 *node = it->second;
+		double d = it->first;
+		toVisit.erase(it);
+
+		if (results.foundEntity && d > results.distance + maxRadius) {
+			continue;
+		}
+		if (!node->isLeafNode) {
+			auto *branch = (QuadTreeBranchNode2 *) node;
+			nrsteq::insertChild(toVisit, branch->get(LOWER_LEFT), query.location, results, maxRadius);
+			nrsteq::insertChild(toVisit, branch->get(LOWER_RIGHT), query.location, results, maxRadius);
+			nrsteq::insertChild(toVisit, branch->get(UPPER_LEFT), query.location, results, maxRadius);
+			nrsteq::insertChild(toVisit, branch->get(UPPER_RIGHT), query.location, results, maxRadius);
+			continue;
+		}
+
+		auto leaf = (QuadTreeLeafNode2 *) node;
+		for (auto& id : leaf->getEntities()) {
+			Entity entity{id, query.state};
+			if (!entity.isLocked) {
+				continue;
+			}
+			auto shape = entity.getShape();
+			if (!shape) {
+				continue;
+			}
+			auto location = entity.getLocation();
+			if (!location) {
+				continue;
+			}
+			auto orientation = entity.getOrientation();
+			if (!orientation) {
+				continue;
+			}
+			double entityDistance = shape->distanceTo(location.get(), orientation.get(), query.location);
+			if (results.foundEntity && entityDistance > results.distance) {
+				continue;
+			}
+			if (!query.include(entity)) {
+				continue;
+			}
+			results.foundEntity = true;
+			results.distance = entityDistance;
+			results.intersects = shape->contains(location.get(), orientation.get(), query.location);
+			results.entityId = id;
+		}
+	}
 }
 
 //void QuadTree2::visit(const Point &min, const Point &max, std::function<void(EntityId, const Point &)> visitor) {

@@ -74,9 +74,19 @@ void ClientMessageHandler::handleMessage(MessageHandlingArgs& context) {
 			context.messageIsHandled = true;
 			break;
 		}
-		case aod::common::message::GAME_TIME_CHANGE: // TODO: Should this happen at the end of the tick...
+		case aod::common::message::SERVER_TICK_BEGIN: // TODO: Should this happen at the end of the tick...
 		{
-			aod::client::common::network::parseGameTime(
+			aod::client::common::network::parseTickBegin(
+				context.reader,
+				clientContext.getGameState()->clientGameState.sharedState
+			);
+			clientContext.getGameState()->clientGameState.sharedState.updateLocations();
+			context.messageIsHandled = true;
+			break;
+		}
+		case aod::common::message::SERVER_TICK_END: // TODO: Should this happen at the end of the tick...
+		{
+			aod::client::common::network::parseTickEnd(
 				context.reader,
 				clientContext.getGameState()->clientGameState.sharedState
 			);

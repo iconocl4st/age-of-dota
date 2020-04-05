@@ -17,6 +17,7 @@ public:
 	virtual bool intersectsRectangle(const Point& location,  double orientation,  const Point& min, const Point& max) = 0;
 	virtual bool intersectsLine(const Point& location, double orientation, const Point& lineBegin, const Point& lineEnd) const = 0;
 	virtual bool intersectsGrid(const Point& location, double orientation, int gridX, int gridY) const = 0;
+	virtual double distanceTo(const Point& location, double orientation, const Point& otherLocation) const = 0;
 };
 
 
@@ -32,6 +33,7 @@ public:
 	bool intersectsRectangle(const Point& location,  double orientation,  const Point& min, const Point& max);
 	bool intersectsGrid(const Point& location, double orientation, int gridX, int gridY) const;
 	void boundingBox(const Point& location, double orientation, Point& minimum, Point& maximum) const;
+	double distanceTo(const Point& location, double orientation, const Point& otherLocation) const;
 
 	void send(JsonWriter *writer) const;
 	void parse(JsonReader *reader);

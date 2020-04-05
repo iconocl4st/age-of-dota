@@ -9,6 +9,7 @@
 #include <list>
 #include <vector>
 #include <thread>
+#include <src/common/spec/player_types.h>
 
 #include "LaunchOptions.h"
 #include "PlayerSlot.h"
@@ -51,7 +52,7 @@ public:
 
     void setPlayerAsSpectator(const std::string& playerName, bool isSpectator);
     void setNumPlayers(int numPlayers);
-    void setPlayerAsAi(int playerNumber, bool isAi);
+    void setPlayerAsAi(int playerNumber, bool isAi, AiType aiType);
 
     void addPlayer(ConnectionContext *context, PlayerType type, int playerNumber);
 

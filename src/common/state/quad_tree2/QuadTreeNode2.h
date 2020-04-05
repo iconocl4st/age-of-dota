@@ -51,6 +51,9 @@ public:
 	inline bool intersects(const Point& min, const Point& max) {
 		return !(min.x > max.x || max.x <= min.x || min.y > max.y || max.y <= min.y);
 	}
+	inline Point project(const Point& location) {
+		return location.project(min, max);
+	}
 
 	inline void incrementSize() { ++size; }
 	inline void decrementSize() { --size; }

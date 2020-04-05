@@ -9,6 +9,15 @@
 //[](EntitySpec *s) -> boost::optional<uint32_t> { return s->capacity; }
 //);
 
+
+
+#define INTERACTION_DISTANCE 1.0
+
+
+
+
+
+
 boost::optional<uint32_t> Entity::getCapacity() {
     auto it = state.capacityManager.find(entityId);
     if (it != state.capacityManager.end()) {
@@ -184,6 +193,21 @@ std::shared_ptr<Shape> Entity::getShape() {
 	return state.typeManager[entityId]->occupies;
 }
 
+boost::optional<Point> Entity::getInteractionPoint() {
+	auto orientationO = getOrientation();
+	if (!orientationO) return boost::optional<Point>{};
+	auto orientation = orientationO.value();
+
+	auto locationO = getLocation();
+	if (!locationO) return boost::optional<Point>{};
+	auto location = locationO.value();
+
+	return Point{
+		location.x + INTERACTION_DISTANCE * cosf(orientation),
+		location.y + INTERACTION_DISTANCE * sinf(orientation)
+	};
+}
+
 boost::optional<Point> Entity::getInteractionPoint(GameTime currentTime) {
 	auto orientationO = getOrientation(currentTime);
 	if (!orientationO) return boost::optional<Point>{};
@@ -193,10 +217,9 @@ boost::optional<Point> Entity::getInteractionPoint(GameTime currentTime) {
 	if (!locationO) return boost::optional<Point>{};
 	auto location = locationO.value();
 
-	float interactionDistance = 1.0;
 	return Point{
-		location.x + interactionDistance * cosf(orientation),
-		location.y + interactionDistance * sinf(orientation)
+		location.x + INTERACTION_DISTANCE * cosf(orientation),
+		location.y + INTERACTION_DISTANCE * sinf(orientation)
 	};
 }
 

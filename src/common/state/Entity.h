@@ -59,6 +59,7 @@ public:
 	std::shared_ptr<aod::common::action::Action> getAction();
 
 	boost::optional<Point> getInteractionPoint(GameTime currentTime);
+	boost::optional<Point> getInteractionPoint();
 
     void debug(JsonWriter& writer);
 

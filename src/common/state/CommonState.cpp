@@ -7,9 +7,14 @@
 
 namespace aod::common::state {
 
+enum OccupancyState {
+	EMPTY = 0,
+	OCCUPIED = 1,
+};
+
 CommonState::CommonState(std::shared_ptr<GameSpecification> spec) :
 	specification{spec},
-	occupied{2, spec->width, spec->height},
+	occupied{2, spec->width, spec->height, EMPTY},
 	locationManager{0, 0, (float) spec->width, (float) spec->height, 5} {
 
 }

@@ -73,7 +73,7 @@ void sendChangeEntityMovement(ConnectionContext *context, EntityId entityId, Mov
 	context->writer.writeEndObject();
 }
 
-void sendGameTime(ConnectionContext *context, GameTime gameTime, std::chrono::high_resolution_clock::time_point& tickTime) {
+void sendTickBegin(ConnectionContext *context, GameTime gameTime, std::chrono::high_resolution_clock::time_point& tickTime) {
 	std::unique_lock<std::recursive_mutex> lock{context->writeLock};
 
 	unsigned long long ns0 = tickTime.time_since_epoch().count();
@@ -81,9 +81,16 @@ void sendGameTime(ConnectionContext *context, GameTime gameTime, std::chrono::hi
 	timeThing << ns0;
 
 	context->writer.writeBeginObject();
-	context->writer.writeInt("message-type", aod::common::message::GAME_TIME_CHANGE);
+	context->writer.writeInt("message-type", aod::common::message::SERVER_TICK_BEGIN);
 	context->writer.writeDouble("current-time", gameTime);
 	context->writer.writeString("tick-time", timeThing.str());
+	context->writer.writeEndObject();
+}
+
+void sendTickEnd(ConnectionContext *context) {
+	std::unique_lock<std::recursive_mutex> lock{context->writeLock};
+	context->writer.writeBeginObject();
+	context->writer.writeInt("message-type", aod::common::message::SERVER_TICK_END);
 	context->writer.writeEndObject();
 }
 

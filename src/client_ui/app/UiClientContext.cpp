@@ -131,7 +131,7 @@ void UiClientContext::launchGame(PlayerLaunchOptions &options) {
 
 	lobbyBrowser.hide();
 //	gameWindow.show();
-//	gameWindow.showFullScreen();
+	gameWindow.showFullScreen();
 
 	gameAdapter.initializeModels();
 	gameAdapter.repaint();

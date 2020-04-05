@@ -73,9 +73,14 @@ int handleGameMessages(JsonReader& reader, ScriptClientContext &clientContext) {
 				aod::client::common::network::parseMovementChanged(reader, clientContext.clientState.sharedState);
 				break;
 			}
-			case aod::common::message::GAME_TIME_CHANGE:
+			case aod::common::message::SERVER_TICK_BEGIN:
 			{
-				aod::client::common::network::parseGameTime(reader, clientContext.clientState.sharedState);
+				aod::client::common::network::parseTickBegin(reader, clientContext.clientState.sharedState);
+				break;
+			}
+			case aod::common::message::SERVER_TICK_END:
+			{
+				aod::client::common::network::parseTickEnd(reader, clientContext.clientState.sharedState);
 				break;
 			}
 			case aod::common::message::PROJECTILE_LAUNCHED:
